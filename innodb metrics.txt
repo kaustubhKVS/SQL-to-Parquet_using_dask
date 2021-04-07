@@ -1,0 +1,495 @@
+
+[mysqld]
+innodb_buffer_pool_size=2G
+innodb_log_file_size=512M
+innodb_write_io_threads=64
+
+innodb_io_capacity=5000 // READ MORE AARAM SE HAVE TO DO SOMETING WITH SSD
+https://www.percona.com/blog/2019/12/18/give-love-to-your-ssds-reduce-innodb_io_capacity_max/
+
+innodb_thread_concurrency=0
+
+innodb_buffer_pool_size = 4G
+
+innodb_log_buffer_size = 500M
+
+innodb_log_file_size = 1G // HAVE TO INCRESE FOR LARGER POOL SIZE // COMMUICATES WITH BUFFER POOL FOR QUERY N BACKUPS
+// IMPORTANT FOR WRITE OPERATIONS // https://www.percona.com/blog/2017/10/18/chose-mysql-innodb_log_file_size/
+
+innodb_write_io_threads = 16 // more than 64 × innodb_read_io_threads pending read requests in SHOW ENGINE INNODB STATUS THEN INCREASE IT
+innodb_read_io_threads=64 // more than 64 × innodb_read_io_threads pending read requests in SHOW ENGINE INNODB STATUS THEN INCREASE IT
+// HAVE TO INCRESE FOR LARGER POOL SIZE OR MANY KEY  // WHEN TO INCREASE ? https://www.saotn.org/mysql-innodb-performance-improvement/
+from previous link. Starting from MariaDB 10.0, the default number of innodb_buffer_pool_instances is 8. This means you have to configure your innodb_buffer_pool_size to at least 8 GB, see the defaults above.
+FOR DEEP DIVE INTO IOI THREAD https://dev.mysql.com/doc/refman/8.0/en/optimizing-innodb-diskio.html
+FOR HIGH END SUBSYSTEM: https://dev.mysql.com/doc/refman/5.6/en/innodb-performance-multiple_io_threads.html
+
+
+FROM https://dba.stackexchange.com/questions/212884/innodb-after-48-hours-of-optimizing-10mb-sec-write-speed
+query_cache_type=OFF  # from ON no need to waste CPU for mgmt
+query_cache_size=0  # from ~256M to conserve RAM and CPU cycles
+slow_query_log=ON  # from OFF always good to have ON
+
+
+innodb_flush_neighbor_pages = none // ISSKO LE LENA, IN MARI DOCUMENTATION // https://mariadb.com/resources/blog/how-to-tune-mariadb-write-performance/
+
+MARK 1:
+FOREGIN KEY CHECKS : SET FOREIGN_KEY_CHECKS=0; UNIQUE_CHECKS=0; SET FOREIGN_KEY_CHECKS=1;
+
+innodb_log_file_size = 256M
+
+innodb_flush_log_at_trx_commit = 1 or 2 or 0 // 2 BECAUSE I DONT GIVE A DAMN ABOUT POWER LOSS // https://mariadb.com/resources/blog/10-database-tuning-tips-for-peak-workloads/
+BUT THREADING CAN COME INTO PLACE: https://www.percona.com/blog/2010/02/28/maximal-write-througput-in-mysql/
+
+innodb_flush_method = O_DIRECT Eliminate Double Buffering // https://www.percona.com/blog/2007/11/03/choosing-innodb_buffer_pool_size/
+
+innodb_autoinc_lock_mode =2  https://www.percona.com/blog/2016/10/12/mysql-5-7-performance-tuning-immediately-after-installation/
+
+BELOW THREE ARE TAEKN FROM : https://www.percona.com/blog/2019/12/18/give-love-to-your-ssds-reduce-innodb_io_capacity_max/
+innodb_adaptive_flushing_lwm = 0  
+innodb_io_capacity = 100 /// lOW io CAPACITY FOR FLUSHING, YOU SEE, CAPACITY AND CAPACITY_MAX HAVE REALTIONSHIP WHICH IS COMPLEX. CHOTA RAKHOGE TO ACHHA HAI DONO,
+NOT TOO HIGH NOT TOO LOW. NOT IN TENS THOUSANDS ALSO (SEE LAST PARA OF LINK)
+
+FINAL:
+
+SET FOREIGN_KEY_CHECKS=0; // SKIPS FORGEIN KEY CHECK WHICH TAKES TOO MUCH TIME //  https://gabi.dev/2016/05/17/fast-data-import-trick/ 
+SET UNIQUE_CHECKS=0; // SKIPS UNIQUE CHECKS  // https://gabi.dev/2016/05/17/fast-data-import-trick/	
+
+innodb_buffer_pool_size=2G  // MOST IMPORTANT: SET ACCORDING TO RAM // https://scalegrid.io/blog/calculating-innodb-buffer-pool-size-for-your-mysql-server
+innodb_buffer_pool_instances = 6 // SO THAT BUFFER POOL SIZE GETS DIVIDED INTO 1 GB EACH // https://www.saotn.org/mysql-innodb-performance-improvement
+
+innodb_log_file_size = 1G
+innodb_log_buffer_size = 500M // HALF OF LOG FILE SIZE // https://dba.stackexchange.com/questions/212884/innodb-after-48-hours-of-optimizing-10mb-sec-write-speed
+
+innodb_write_io_threads = 64 // SEE UP
+innodb_read_io_threads= 32 // SEE UP
+
+innodb_io_capacity= 40000 // SEE DOWN N UP // CHANGE THIS LATER // TESTING FOR HIGH WRITE
+innodb_io_capacity_max = 40000 // SEE DOWN N UP // CHANGE THIS LATER // TESTING FOR HIGH WRITE // EPENDANT ON IO CAPACITY
+
+innodb_flush_method = O_DIRECT // SEE UP
+innodb_flush_neighbor_pages = none // SEE UP
+
+innodb_autoinc_lock_mode =2 // OPTIMISED FOR HIGH WRITE // SEE UP
+innodb_flush_log_at_trx_commit = 0 //  // CAHNGED FROM 2 DUE TO THREADING
+
+query_cache_type=OFF  # from ON no need to waste CPU for mgmt
+query_cache_size=0  # from ~256M to conserve RAM and CPU cycles
+slow_query_log=ON  # from OFF always good to have ON
+
+innodb_thread_concurrency=0  // https://mariadb.com/kb/en/innodb-system-variables/#innodb_thread_concurrency
+
+------------------------
+CUSTOMISING FOR DGX:
+
+>> free -h
+@ 5.12 am 24-02-2021
+
+              total        used        free      shared  buff/cache   available
+Mem:           503G         30G        166G        367M        307G        469G
+going with a 64G combination
+
+
+
+SET FOREIGN_KEY_CHECKS=0;
+SET UNIQUE_CHECKS=0;
+
+innodb_buffer_pool_size= 64G // out of 166
+innodb_buffer_pool_instances = 64 // 1 gb per instance
+
+innodb_log_file_size = 12G // large for large pool
+innodb_log_buffer_size = 6G // so that half wait time occurs
+
+innodb_write_io_threads = 64 // due to 64 gb
+innodb_read_io_threads = 64 // due to 64 gb
+
+innodb_io_capacity= 40000 // not too big
+innodb_io_capacity_max = 50000 // //if too big than normal performance of normal capacity drops
+
+innodb_flush_method = O_DIRECT
+innodb_flush_neighbor_pages = none
+
+innodb_autoinc_lock_mode =2 
+innodb_flush_log_at_trx_commit = 0
+
+query_cache_type=OFF
+query_cache_size=0
+slow_query_log=ON 
+
+innodb_thread_concurrency=0 // for machine to automatically make opotimum threads
+
+given input:
+
+innodb_buffer_pool_size= 64G
+innodb_buffer_pool_instances = 64
+
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+
+innodb_flush_method = O_DIRECT
+innodb_flush_neighbor_pages = none
+
+innodb_autoinc_lock_mode =2
+innodb_flush_log_at_trx_commit = 0
+innodb_thread_concurrency=0
+
+query_cache_type=OFF
+query_cache_size=0
+slow_query_log=ON
+
+
+##########################################################################################################################################
+TRIAL 1:
+innodb_buffer_pool_size= 12G //GOOD
+
+TRIAL 2:
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 16 pass
+
+TRIAL 3: PASS IT TAKES TIME TO LOAD
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+
+TRIAL 4: FAIL: WILL TRY TO CHANGE LOG FILE SIZE I.E. LOWER
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+
+innodb_log_file_size = 12G
+
+TRIAL 4: PASS : WILL TRY TO CHANGE LOG FILE SIZE 
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 1G
+
+TRIAL 5: PASS : WILL TRY TO CHANGE LOG FILE SIZE
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 4G
+
+FAILED AT FIRST
+AFTER RESTARTING 3 TIME PASSED,
+
+
+
+TRIAL 5: : WILL TRY TO CHANGE LOG FILE SIZE
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 8G
+
+FAILED AT FIRST
+AFTER RESTARTING 3 TIME PASSED, 
+
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d#
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d#
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [fail]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [fail]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [fail]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql restart
+ * Stopping MariaDB database server mysqld                                                                                          [ OK ]
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql restart
+ * Stopping MariaDB database server mysqld                                                                                          [ OK ]
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+
+TRIAL 5: PASS : WILL TRY TO CHANGE LOG FILE SIZE
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+
+FAILED AT FIRST
+AFTER RESTARTING 5 TIME PASSED, 
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [fail]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [fail]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [fail]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [fail]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [fail]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql restart
+ * Stopping MariaDB database server mysqld                                                                                          [ OK ]
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql restart
+ * Stopping MariaDB database server mysqld                                                                                          [ OK ]
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+
+TRIAL 5: WILL TRY TO CHANGE LOG FILE SIZE
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 1G
+
+PASS AT FIRST TRY
+
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+
+TRIAL 6: WILL TRY TO CHANGE LOG FILE SIZE : PASSSSSSS, I THINK BECAUSE USSKO SMAJAH GYA
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql restart
+ * Stopping MariaDB database server mysqld                                                                                          [ OK ]
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+
+TRIAL 6: WILL TRY TO CHANGE LOG FILE SIZE : PASSSSSSS, I THINK BECAUSE USSKO SMAJAH GYA
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# nano 50-server.cnf
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql start
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+
+TRIAL 6: WILL TRY TO CHANGE LOG FILE SIZE : PASSSSSSS, I THINK BECAUSE USSKO SMAJAH GYA
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+
+(rapids) root@9600962630f4:/etc/mysql/mariadb.conf.d# service mysql restart
+ * Stopping MariaDB database server mysqld                                                                                          [ OK ]
+ * Starting MariaDB database server mysqld                                                                                          [ OK ]
+
+TRIAL 7: WILL TRY TO CHANGE LOG FILE SIZE : PASSSSSSS, I THINK BECAUSE USSKO SMAJAH GYA
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+
+
+
+TRIAL 8: WILL TRY TO CHANGE LOG FILE SIZE
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+innodb_flush_method = O_DIRECT
+innodb_flush_neighbor_pages = none
+
+FAILED 12 TIMES DO NOT USE: innodb_flush_neighbor_pages = none
+
+TRIAL 9: REMOVE INNODB FLUSH NEIGHBOUR PAGES: PASSSSSSS, I THINK BECAUSE USSKO SMAJAH GYA
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+innodb_flush_method = O_DIRECT
+
+
+
+
+TRIAL 10 : REMOVE INNODB FLUSH NEIGHBOUR PAGES: PASSSSSSS, I THINK BECAUSE USSKO SMAJAH GYA
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+innodb_flush_method = O_DIRECT
+innodb_autoinc_lock_mode =2
+ PASSS AUTOINC WORKS
+
+TRIAL 11 : REMOVE INNODB FLUSH NEIGHBOUR PAGES: PASSSSSSS, I THINK BECAUSE USSKO SMAJAH GYA
+
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+innodb_flush_method = O_DIRECT
+innodb_autoinc_lock_mode =2
+innodb_flush_log_at_trx_commit = 0
+	PASS FLUSH LOG AT TRX COMMIT WORKS
+
+TRIAL 12 : REMOVE INNODB FLUSH NEIGHBOUR PAGES: PASSSSSSS, I THINK BECAUSE USSKO SMAJAH GYA
+
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+innodb_flush_method = O_DIRECT
+innodb_autoinc_lock_mode =2
+innodb_flush_log_at_trx_commit = 0
+innodb_thread_concurrency=0
+
+	PASS thread_concurrency=0 WORKS
+
+TRIAL 13 : REMOVE INNODB FLUSH NEIGHBOUR PAGES: PASSSSSSS, I THINK BECAUSE USSKO SMAJAH GYA
+
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+innodb_flush_method = O_DIRECT
+innodb_autoinc_lock_mode =2
+innodb_flush_log_at_trx_commit = 0
+innodb_thread_concurrency=0
+
+TRIAL 14 : REMOVE INNODB FLUSH NEIGHBOUR PAGES
+
+innodb_buffer_pool_size= 64G //GOOD
+innodb_buffer_pool_instances = 64 //pass
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+innodb_flush_method = O_DIRECT
+innodb_autoinc_lock_mode =2
+innodb_flush_log_at_trx_commit = 0
+innodb_thread_concurrency=0
+
+query_cache_type=OFF
+
+	passssssssssssss
+
+TRIAL 15 : REMOVE INNODB FLUSH NEIGHBOUR PAGES
+
+innodb_buffer_pool_size= 64G 
+innodb_buffer_pool_instances = 64
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+innodb_flush_method = O_DIRECT
+innodb_autoinc_lock_mode =2
+innodb_flush_log_at_trx_commit = 0
+innodb_thread_concurrency=0
+
+query_cache_type=OFF
+query_cache_size=0
+slow_query_log=ON 
+
+
+
+	passssssssssssss
+
+
+
+
+
+YET TO TRY:
+innodb_thread_concurrency=0
+https://mariadb.com/kb/en/innodb-system-variables/
+
+
+
+These settings will dramatically increase
+the import speed of innodb data from a mysqldump export file,
+containing an Innodb table with millions++ of rows,
+transforming what used to span hours into mere minutes,
+Set, import, then reset my.cnf to original settings.
+(restart required for each change)
+
+In my.cnf set (my workstation has 8G RAM)
+
+innodb_buffer_pool_size = 4G
+innodb_log_buffer_size = 500M
+innodb_log_file_size = 1G
+innodb_write_io_threads = 16
+innodb_flush_log_at_trx_commit = 0
+In the mysqldump file add this before you start the sql statements
+
+SET FOREIGN_KEY_CHECKS=0;
+SET UNIQUE_CHECKS=0;
+SET AUTOCOMMIT=0;
+At the end of the file don't forget
+
+COMMIT;
+
+Aloha!
+
+
+SHOW STATUS LIKE '%key_read%';
+SHOW STATUS LIKE 'thread%';
+
+before commiting cahnge: https://dba.stackexchange.com/questions/41872/configuring-mysql-my-cnf-for-myisam-and-innodb
+
+Work on: InnoDB AUTO_INCREMENT Lock Modes https://dev.mysql.com/doc/refman/5.7/en/innodb-auto-increment-handling.html#innodb-auto-increment-lock-modes
+
+mysql> use your_database_name;
+mysql> source file.sql;
+
+FOR LOG BUFFER SEE THIS:
+https://www.percona.com/blog/2007/11/03/choosing-innodb_buffer_pool_size/
+
+ On Linux, FreeBSD, Solaris you need to set innodb_flush_method=O_DIRECT. On other Operating Systems you may be able to select it on OS level but make sure to do it. There is a small niche case when it hurts – when you do not have RAID with BBU and your workload is very write intensive but there are always exceptions.
+
+FROM: VERY IMPORTANT PAGE
+https://dba.stackexchange.com/questions/212884/innodb-after-48-hours-of-optimizing-10mb-sec-write-speed
+
+innodb_io_capacity=40000  # from 5000 to open the door for NVME speed
+read_rnd_buffer_size=256K  # from 1M to reduce handler_read_rnd_next RPS
+innodb_lru_scan_depth=128  # from 1024 to conserve CPU every second
+innodb_adaptive_max_sleep_delay=10000 # from 150000 for 1 sec sleep delay
+innodb_flushing_avg_loops=4  # from 30 for reduce the loop delay
+innodb_thread_concurrency=0  # from 144 see dba.stackexhange Question 5666
+max_seeks_for_key=32  # to limit optimizer to nn vs ~ 4 Billion possible
+max_write_locks_count=16  # to allow RD after nn lcks vs up to 4 Billion lcks
+thread_concurrency=30  # from 10 for additional conc - may be DEPR
+innodb_buffer_pool_instances=8  # from 64 see REFMAN for innodb_lru_scan_depth details
+innodb_log_file_size=6G  # from ~ 512M to reduce log rotation
+innodb_log_buffer_size=3G  # from 16M for ~ 30 minutes buffering
+query_cache_type=OFF  # from ON no need to waste CPU for mgmt
+query_cache_size=0  # from ~256M to conserve RAM and CPU cycles
+slow_query_log=ON  # from OFF always good to have ON
+
+TUNE MARIA FOR IO: 
+Innodb_flush_neighbor_pages = none, innodb_io_capacity = what_your_hardware_can_do 
+https://mariadb.com/resources/blog/how-to-tune-mariadb-write-performance/

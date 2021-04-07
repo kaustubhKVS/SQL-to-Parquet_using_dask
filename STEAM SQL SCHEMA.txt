@@ -1,0 +1,219 @@
+DATABASE NAME: eggrice
+USER: root
+PASSKEY: qwert
+
+FOLLOWING RESULTS ARE GENERATED WHEN ENTIRE steam.sql IS IMPORTED. 
+######### IMPORTANT ###########
+THIS IS SQL SCHEMA. THIS IS NOT A DATAFRAME SCHEMA. COLUMN TYPE MIGHT DIFFER IN PARQUET FILES.
+DATAFRAME BASED SCHEMA WILL BE AVALIABLES ONLY AFTER COMPLETE DATA CONVERSION OF SQL TABLES TO PARQUET IS DONE.
+###############################
+
+
+Tables in eggrice database:
+
++---------------------------------+------------+
+| table_name                      | table_size |
++---------------------------------+------------+
+| eggrice.Achievement_Percentages | 0.007 G    |1 
+| eggrice.App_ID_Info             | 0.002 G    |2 
+| eggrice.App_ID_Info_Old         | 0.001 G    |3
+| eggrice.Friends                 | 111.622 G  |4
+| eggrice.Games_1                 | 36.006 G   |5 
+| eggrice.Games_2                 | 63.258 G   |6 
+| eggrice.Games_Daily             | 5.315 G    |7 
+| eggrice.Games_Developers        | 0.001 G    |8
+| eggrice.Games_Developers_Old    | 0.000 G    |9 
+| eggrice.Games_Genres            | 0.001 G    |10
+| eggrice.Games_Genres_Old        | 0.001 G    |11
+| eggrice.Games_Publishers        | 0.001 G    |12
+| eggrice.Games_Publishers_Old    | 0.000 G    |13
+| eggrice.Groups                  | 7.865 G    |14
+| eggrice.Player_Summaries        | 100.606 G  |15
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+
+
+Player_Summaries;
++--------------------------+---------------------+------+-----+---------+-------+
+| Field                    | Type                | Null | Key | Default | Extra |
++--------------------------+---------------------+------+-----+---------+-------+
+| steamid                  | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| personaname              | varchar(64)         | YES  | MUL | NULL    |       |
+| profileurl               | varchar(128)        | YES  |     | NULL    |       |
+| avatar                   | varchar(128)        | YES  |     | NULL    |       |
+| avatarmedium             | varchar(128)        | YES  |     | NULL    |       |
+| avatarfull               | varchar(128)        | YES  |     | NULL    |       |
+| personastate             | tinyint(3) unsigned | YES  |     | NULL    |       |
+| communityvisibilitystate | tinyint(3) unsigned | YES  |     | NULL    |       |
+| profilestate             | tinyint(3) unsigned | YES  |     | NULL    |       |
+| lastlogoff               | datetime            | YES  | MUL | NULL    |       |
+| commentpermission        | tinyint(3) unsigned | YES  |     | NULL    |       |
+| realname                 | varchar(128)        | YES  |     | NULL    |       |
+| primaryclanid            | bigint(20) unsigned | YES  | MUL | NULL    |       |
+| timecreated              | datetime            | YES  | MUL | NULL    |       |
+| gameid                   | int(10) unsigned    | YES  |     | NULL    |       |
+| gameserverip             | varchar(64)         | YES  |     | NULL    |       |
+| gameextrainfo            | varchar(64)         | YES  |     | NULL    |       |
+| cityid                   | int(10) unsigned    | YES  |     | NULL    |       |
+| loccountrycode           | varchar(2)          | YES  |     | NULL    |       |
+| locstatecode             | varchar(4)          | YES  |     | NULL    |       |
+| loccityid                | int(10) unsigned    | YES  |     | NULL    |       |
+| dateretrieved            | datetime            | YES  | MUL | NULL    |       |
++--------------------------+---------------------+------+-----+---------+-------+
+
+
+Groups;
++---------------+---------------------+------+-----+---------+-------+
+| Field         | Type                | Null | Key | Default | Extra |
++---------------+---------------------+------+-----+---------+-------+
+| steamid       | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| groupid       | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| dateretrieved | datetime            | YES  |     | NULL    |       |
++---------------+---------------------+------+-----+---------+-------+
+
+Games_Publishers;
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Publisher | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+
+
+Games_Genres;
++-------+------------------+------+-----+---------+-------+
+| Field | Type             | Null | Key | Default | Extra |
++-------+------------------+------+-----+---------+-------+
+| appid | int(10) unsigned | NO   | PRI | NULL    |       |
+| Genre | varchar(64)      | NO   | PRI | NULL    |       |
++-------+------------------+------+-----+---------+-------+
+
+
+Games_Developers_Old;
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Developer | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+
+Games_Developers;
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Developer | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+
+
+Games_Daily;
++------------------+---------------------+------+-----+---------------------+-------+
+| Field            | Type                | Null | Key | Default             | Extra |
++------------------+---------------------+------+-----+---------------------+-------+
+| steamid          | bigint(20) unsigned | NO   | PRI | NULL                |       |
+| appid            | int(10) unsigned    | NO   | PRI | NULL                |       |
+| playtime_2weeks  | int(10) unsigned    | YES  |     | NULL                |       |
+| playtime_forever | int(10) unsigned    | YES  |     | NULL                |       |
+| dateretrieved    | datetime            | NO   | PRI | 0000-00-00 00:00:00 |       |
++------------------+---------------------+------+-----+---------------------+-------+
+
+Friends Table :
++---------------+---------------------+------+-----+---------+-------+                                                                                
+| Field         | Type                | Null | Key | Default | Extra |                                                                              
++---------------+---------------------+------+-----+---------+-------+                                                                                 
+| steamid_a     | bigint(20) unsigned | NO   | PRI | NULL    |       |                                                                                 
+| steamid_b     | bigint(20) unsigned | NO   | PRI | NULL    |       |                                                                                 
+| relationship  | varchar(32)         | YES  |     | NULL    |       |                                                                                
+| friend_since  | datetime            | YES  | MUL | NULL    |       |                                                                                 
+| dateretrieved | datetime            | YES  | MUL | NULL    |       |                                                                                  
+| LccTag        | int(1) unsigned     | YES  |     | NULL    |       |                                                                              
++---------------+---------------------+------+-----+---------+-------+ 
+
+Games_1 :
++------------------+---------------------+------+-----+---------+-------+
+| Field            | Type                | Null | Key | Default | Extra |
++------------------+---------------------+------+-----+---------+-------+
+| steamid          | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| appid            | int(10) unsigned    | NO   | PRI | NULL    |       |
+| playtime_2weeks  | int(10) unsigned    | YES  |     | NULL    |       |
+| playtime_forever | int(10) unsigned    | YES  |     | NULL    |       |
+| dateretrieved    | datetime            | YES  |     | NULL    |       |
++------------------+---------------------+------+-----+---------+-------+
+
+Games_2:
++------------------+---------------------+------+-----+---------+-------+
+| Field            | Type                | Null | Key | Default | Extra |
++------------------+---------------------+------+-----+---------+-------+
+| steamid          | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| appid            | int(10) unsigned    | NO   | PRI | NULL    |       |
+| playtime_2weeks  | int(10) unsigned    | YES  |     | NULL    |       |
+| playtime_forever | int(10) unsigned    | YES  |     | NULL    |       |
+| dateretrieved    | datetime            | YES  |     | NULL    |       |
++------------------+---------------------+------+-----+---------+-------+
+ 
+
+Games_Developers_Old:
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Developer | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+
+
+Games_Genres_Old:
++-------+------------------+------+-----+---------+-------+
+| Field | Type             | Null | Key | Default | Extra |
++-------+------------------+------+-----+---------+-------+
+| appid | int(10) unsigned | NO   | PRI | NULL    |       |
+| Genre | varchar(64)      | NO   | PRI | NULL    |       |
++-------+------------------+------+-----+---------+-------+
+
+
+Games_Publishers_Old:
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Publisher | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+
+
+Achievement_Percentages;
++------------+------------------+------+-----+---------+-------+
+| Field      | Type             | Null | Key | Default | Extra |
++------------+------------------+------+-----+---------+-------+
+| appid      | int(10) unsigned | NO   | PRI | NULL    |       |
+| Name       | varchar(64)      | NO   | PRI | NULL    |       |
+| Percentage | float            | NO   |     | NULL    |       |
++------------+------------------+------+-----+---------+-------+
+
+
+App_ID_Info;
++----------------+------------------+------+-----+---------+-------+
+| Field          | Type             | Null | Key | Default | Extra |
++----------------+------------------+------+-----+---------+-------+
+| appid          | int(10) unsigned | NO   | PRI | NULL    |       |
+| Title          | varchar(128)     | NO   |     | NULL    |       |
+| Type           | varchar(128)     | NO   |     | NULL    |       |
+| Price          | double           | NO   |     | NULL    |       |
+| Release_Date   | datetime         | NO   |     | NULL    |       |
+| Rating         | int(11)          | NO   |     | NULL    |       |
+| Required_Age   | int(11)          | NO   |     | NULL    |       |
+| Is_Multiplayer | int(11)          | NO   |     | NULL    |       |
++----------------+------------------+------+-----+---------+-------+
+ 
+
+App_ID_Info_Old;
++----------------+------------------+------+-----+---------+-------+
+| Field          | Type             | Null | Key | Default | Extra |
++----------------+------------------+------+-----+---------+-------+
+| appid          | int(10) unsigned | NO   | PRI | NULL    |       |
+| Title          | varchar(128)     | NO   |     | NULL    |       |
+| Type           | varchar(128)     | NO   |     | NULL    |       |
+| Price          | double           | NO   |     | NULL    |       |
+| Release_Date   | datetime         | NO   |     | NULL    |       |
+| Rating         | int(11)          | NO   |     | NULL    |       |
+| Required_Age   | int(11)          | NO   |     | NULL    |       |
+| Is_Multiplayer | int(11)          | NO   |     | NULL    |       |
++----------------+------------------+------+-----+---------+-------+

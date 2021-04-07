@@ -1,0 +1,631 @@
+sudo docker exec -it CONTAINER_ID bash
+
+Where CONTAINER_ID is the ID presented to you when you ran the run command.
+After running this command you will find yourself in the terminal of the running container. Now, let's add the necessary software for the template. To do this, issue the following commands:
+
+apt-get install nano
+​apt-get install build-essential
+​apt-get install php5
+
+https://www.youtube.com/watch?v=7H0manxJzFw
+>> apt-get update
+>> apt-get upgrade
+>> apt-get install mariadb-server mariadb-client
+>> service mysql status
+>> service mysql start
+>> mysql_secure_installation
+>> service mysql stop
+>> mysql -u root -p
+>> 	
+say no to dissmiss part
+>>mysql -u root -p  
+
+>> cd /etc/mysql/mariadb.conf.d/
+you wil get into mariadb terminal
+
+maria>> SHOW DATABASES;
+maria>> SHOW PROCESSLIST;
+maria>> DROP DATABASE steamdata;
+maria>> SELECT user();
+
+//If you want to get port your "mysql://user:pass@hostname:port/db"
+maria>> SHOW VARIABLES WHERE Variable_name = 'port';
+
+
+//for counting number of rows in a table:
+maria>> SELECT COUNT(*) FROM fooTable;
+
+//view first 10 rows of a table
+maria>> SELECT column FROM table LIMIT 10;
+
+MONITER THE PROGRESS: https://dba.stackexchange.com/questions/17367/how-can-i-monitor-the-progress-of-an-import-of-a-large-sql-file
+
+CHANGE SQL FILE FROM MYISAM TO INNODB: https://stackoverflow.com/questions/7739828/how-can-i-override-the-engine-innodb-parameter-while-importing-a-mysql-dump-file
+> sed -i 's/ENGINE=INNODB/ENGINE=MYISAM/g' filename
+>> sed -i 's/ENGINE=MYISAM/ENGINE=INNODB/g' filename
+sed -e '...' input.txt | pv > output.txt
+sed -i -re 's/^(\) ENGINE=)INNODB/\1MyISAM/gi' 
+
+sed -i -re 's/^(\) ENGINE=)MyISAM/\1INNODB/gi' 
+
+sed -i -re -e 's/^(\) ENGINE=)MyISAM/\1INNODB/gi' steamtest2.sql | pv newino.sql
+
+#################################
+sed -i -re 's/^(\) ENGINE=)MyISAM/\1INNODB/gi' <filename>   ################# THIS WORKS AWESOME to convert to innodb !!
+#################################
+
+CHANGING INGINE INSIDE A TABLE :  https://stackoverflow.com/questions/3856435/how-to-convert-all-tables-from-myisam-into-innodb 
+
+###############################3
+>> pv steam-copy1.sql | mysql -u root -pPass <DBName>
+############################################
+
+>> pv steamino3.sql | mysql -u root -pPass test
+
+>> cd /etc/mysql/mariadb.conf.d
+
+>> pv -p -t -e -r -b steam-copy1.sql | mysql -u root -pPass <DBName>
+
+maria>> SELECT table_schema AS "Database", SUM(data_length + index_length) / 1024 / 1024 / 1024 AS "Size (GB)" FROM information_schema.TABLES GROUP BY table_schema;
+maria>> SHOW TABLE STATUS FROM `nameofdb; // https://stackoverflow.com/questions/4515490/how-do-i-know-if-a-mysql-table-is-using-myisam-or-innodb-engine
+maria>> SHOW Variables WHERE Variable_name='foreign_key_checks' ; https://stackoverflow.com/questions/15938786/disabling-foreign-key-checks-on-the-command-line
+maria>> show variables like 'innodb%';
+
+// to see tables sizes
+maria>> SELECT CONCAT(db,'.',tb) table_name,CONCAT(ROUND(
+tbsz/POWER(1024,IF(pw<0,0,IF(pw>4,4,pw))),3),' ',
+SUBSTR(' KMGT',IF(pw<0,0,IF(pw>4,4,pw))+1,1)) table_size
+FROM (SELECT data_length+index_length tbsz,table_schema db,table_name tb
+FROM information_schema.tables WHERE engine='InnoDB') A,
+(SELECT 3 pw) B;
+
+
+???
++-----------+                                                                                                                                              │···········
+| COUNT(*)  |                                                                                                                                              │···········
++-----------+                                                                                                                                              │···········
+| 392732150 | // numbers of rows in friends table                                                                                                                                             │···········
++-----------+
+???
+
++-----------------------------------+------------+
+| table_name                        | table_size |
++-----------------------------------+------------+
+| babaspeed.Achievement_Percentages | 0.007 G    |
+| babaspeed.App_ID_Info             | 0.002 G    |
+| babaspeed.App_ID_Info_Old         | 0.001 G    |
+| babaspeed.Friends                 | 113.039 G  |
+| babaspeed.Games_1                 | 33.291 G   |
+| babaspeed.Games_2                 | 38.847 G   |
+| babaspeed.Games_Developers_Old    | 0.000 G    |
+| babaspeed.Games_Genres_Old        | 0.001 G    |
+| babaspeed.Games_Publishers_Old    | 0.000 G    |
+'"""""""""""""""""""""""""""""""""""""""""""""""""
+
++---------------------------------+------------+
+| table_name                      | table_size |
++---------------------------------+------------+
+| eggrice.Achievement_Percentages | 0.007 G    |1
+| eggrice.App_ID_Info             | 0.002 G    |2
+| eggrice.App_ID_Info_Old         | 0.001 G    |3
+| eggrice.Friends                 | 111.622 G  |4
+| eggrice.Games_1                 | 36.006 G   |5
+| eggrice.Games_2                 | 63.258 G   |6
+| eggrice.Games_Daily             | 5.315 G    |7 //////////
+| eggrice.Games_Developers        | 0.001 G    |8 //////////
+| eggrice.Games_Developers_Old    | 0.000 G    |9 /////////
+| eggrice.Games_Genres            | 0.001 G    |10 /////////
+| eggrice.Games_Genres_Old        | 0.001 G    |11
+| eggrice.Games_Publishers        | 0.001 G    |12 /////////
+| eggrice.Games_Publishers_Old    | 0.000 G    |13
+| eggrice.Groups                  | 7.865 G    |14 ////////
+| eggrice.Player_Summaries        | 100.606 G  |15 ////////
+""""""""""""""""""""""""""""""""""""""""""""""""
+//for viewing columns
+SHOW COLUMNS FROM database_Name.table_name;
+
+// for resetting password
+https://stackoverflow.com/questions/39281594/error-1698-28000-access-denied-for-user-rootlocalhost
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'new-password';
+then restart the service
+
+
+>> find / -type d -name "mysql" 2>/dev/null
+
+>> log_error = /var/log/mysql/error.log
+
+>> ps aux | grep mysql | grep -v grep
+
+>> kill 30882
+>> kill -9 30882
+
+https://askubuntu.com/questions/640899/how-do-i-uninstall-mysql-completely
+>> apt-get remove mariadb-server mariadb-client mysql-common
+>> dpkg -l | grep mysql
+>> apt-get --yes purge mysql-common
+>> apt-get --yes purge mariadb-server mariadb-client mysql-common
+>> apt-get autoclean	
+>> kill $(pgrep mysql)
+>> rm -rf /etc/mysql /var/lib/mysql /var/log/mysql* /var/log/upstart/mysql.log* /var/run/mysqld
+>> rm -rf /etc/mysql /var/lib/mysql /var/log/mysql* /var/log/upstart/mysql.log* /var/run/mysqld
+
+/bin/bash
+
+apt-get purge mysql-common --yes
+apt-get autoclean --yes
+
+DELETE AND RE-INSTALL SQL SCRIPT: (COMPLETE REMOVAL WITH LOGS AND EVERYTHING)
+
+!/bin/bash
+service mysql stop
+kill $(pgrep mysql)
+apt-get --yes purge mariadb-server mariadb-client mysql-common
+rm -rf /etc/mysql
+apt-get autoremove --yes
+apt-get autoclean --yes
+apt-get update --yes
+apt-get install mariadb-server mariadb-client
+service mysql status
+service mysq start
+mysql_secure_installation
+
+chmod +x test.sh
+./test.sh
+
+LOGS:
+
+SET @DATABASE_NAME = 'steamtrail';
+
+SELECT  CONCAT('ALTER TABLE `', table_name, '` ENGINE=InnoDB;') AS sql_statements
+FROM    information_schema.tables AS tb
+WHERE   table_schema = @DATABASE_NAME
+AND     `ENGINE` = 'MyISAM'
+AND     `TABLE_TYPE` = 'BASE TABLE'
+ORDER BY table_name DESC;
+
+
+
+
+
+
+
+
+
+####################
+ETA 9:52:777.9GiB 9:20:33 [4.40MiB/s] [===========================================>                                                 ] 48% ETA 9:52:3ERRO│··············
+R 1114 (HY000) at line 81984: The table 'Games_2' is full===========>                                                 ] 48% ETA 9:46:12                 │··············
+78.5GiB 9:22:38 [2.38MiB/s] [===========================================>                                                 ] 48%    
+
+
+
+
+
+BABASPEED:
+
++-----------------------------------+------------+
+| table_name                        | table_size |
++-----------------------------------+------------+
+| babaspeed.Achievement_Percentages | 0.007 G    |
+| babaspeed.App_ID_Info             | 0.002 G    |
+| babaspeed.App_ID_Info_Old         | 0.001 G    |
+| babaspeed.Friends                 | 113.039 G  |
+| babaspeed.Games_1                 | 33.291 G   |
+| babaspeed.Games_2                 | 38.847 G   |
+| babaspeed.Games_Developers_Old    | 0.000 G    |
+| babaspeed.Games_Genres_Old        | 0.001 G    |
+| babaspeed.Games_Publishers_Old    | 0.000 G    |
+'"""""""""""""""""""""""""""""""""""""""""""""""""
+
+
+Friends Table :
++---------------+---------------------+------+-----+---------+-------+                                                                                
+| Field         | Type                | Null | Key | Default | Extra |                                                                              
++---------------+---------------------+------+-----+---------+-------+                                                                                 
+| steamid_a     | bigint(20) unsigned | NO   | PRI | NULL    |       |                                                                                 
+| steamid_b     | bigint(20) unsigned | NO   | PRI | NULL    |       |                                                                                 
+| relationship  | varchar(32)         | YES  |     | NULL    |       |                                                                                
+| friend_since  | datetime            | YES  | MUL | NULL    |       |                                                                                 
+| dateretrieved | datetime            | YES  | MUL | NULL    |       |                                                                                  
+| LccTag        | int(1) unsigned     | YES  |     | NULL    |       |                                                                              
++---------------+---------------------+------+-----+---------+-------+ 
+
+Games_1 :
++------------------+---------------------+------+-----+---------+-------+
+| Field            | Type                | Null | Key | Default | Extra |
++------------------+---------------------+------+-----+---------+-------+
+| steamid          | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| appid            | int(10) unsigned    | NO   | PRI | NULL    |       |
+| playtime_2weeks  | int(10) unsigned    | YES  |     | NULL    |       |
+| playtime_forever | int(10) unsigned    | YES  |     | NULL    |       |
+| dateretrieved    | datetime            | YES  |     | NULL    |       |
++------------------+---------------------+------+-----+---------+-------+
+Games_1;
++-----------+
+| COUNT(*)  |
++-----------+
+| 384270567 |
++-----------+
+
+Games_2:
++------------------+---------------------+------+-----+---------+-------+
+| Field            | Type                | Null | Key | Default | Extra |
++------------------+---------------------+------+-----+---------+-------+
+| steamid          | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| appid            | int(10) unsigned    | NO   | PRI | NULL    |       |
+| playtime_2weeks  | int(10) unsigned    | YES  |     | NULL    |       |
+| playtime_forever | int(10) unsigned    | YES  |     | NULL    |       |
+| dateretrieved    | datetime            | YES  |     | NULL    |       |
++------------------+---------------------+------+-----+---------+-------+
+ Games_2;
++-----------+
+| COUNT(*)  |
++-----------+
+| 447995352 |
++-----------+
+
+Games_Developers_Old:
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Developer | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+ Games_Developers_Old;
++----------+
+| COUNT(*) |
++----------+
+|     8825 |
++----------+
+
+Games_Genres_Old:
++-------+------------------+------+-----+---------+-------+
+| Field | Type             | Null | Key | Default | Extra |
++-------+------------------+------+-----+---------+-------+
+| appid | int(10) unsigned | NO   | PRI | NULL    |       |
+| Genre | varchar(64)      | NO   | PRI | NULL    |       |
++-------+------------------+------+-----+---------+-------+
+Games_Genres_Old;
++----------+
+| COUNT(*) |
++----------+
+|    15833 |
++----------+
+
+Games_Publishers_Old:
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Publisher | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+Games_Publishers_Old;
++----------+
+| COUNT(*) |
++----------+
+|     8863 |
++----------+
+
+
+Achievement_Percentages;
++------------+------------------+------+-----+---------+-------+
+| Field      | Type             | Null | Key | Default | Extra |
++------------+------------------+------+-----+---------+-------+
+| appid      | int(10) unsigned | NO   | PRI | NULL    |       |
+| Name       | varchar(64)      | NO   | PRI | NULL    |       |
+| Percentage | float            | NO   |     | NULL    |       |
++------------+------------------+------+-----+---------+-------+
+Achievement_Percentages;;
++----------+
+| COUNT(*) |
++----------+
+|   156253 |
++----------+
+
+
+App_ID_Info;
++----------------+------------------+------+-----+---------+-------+
+| Field          | Type             | Null | Key | Default | Extra |
++----------------+------------------+------+-----+---------+-------+
+| appid          | int(10) unsigned | NO   | PRI | NULL    |       |
+| Title          | varchar(128)     | NO   |     | NULL    |       |
+| Type           | varchar(128)     | NO   |     | NULL    |       |
+| Price          | double           | NO   |     | NULL    |       |
+| Release_Date   | datetime         | NO   |     | NULL    |       |
+| Rating         | int(11)          | NO   |     | NULL    |       |
+| Required_Age   | int(11)          | NO   |     | NULL    |       |
+| Is_Multiplayer | int(11)          | NO   |     | NULL    |       |
++----------------+------------------+------+-----+---------+-------+
+ App_ID_Info;
++----------+
+| COUNT(*) |
++----------+
+|    17783 |
++----------+
+
+App_ID_Info_Old;
++----------------+------------------+------+-----+---------+-------+
+| Field          | Type             | Null | Key | Default | Extra |
++----------------+------------------+------+-----+---------+-------+
+| appid          | int(10) unsigned | NO   | PRI | NULL    |       |
+| Title          | varchar(128)     | NO   |     | NULL    |       |
+| Type           | varchar(128)     | NO   |     | NULL    |       |
+| Price          | double           | NO   |     | NULL    |       |
+| Release_Date   | datetime         | NO   |     | NULL    |       |
+| Rating         | int(11)          | NO   |     | NULL    |       |
+| Required_Age   | int(11)          | NO   |     | NULL    |       |
+| Is_Multiplayer | int(11)          | NO   |     | NULL    |       |
++----------------+------------------+------+-----+---------+-------+
+App_ID_Info_Old;
++----------+
+| COUNT(*) |
++----------+
+|     8389 |
++----------+
+
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@FULLL TABLE@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
++---------------------------------+------------+
+| table_name                      | table_size |
++---------------------------------+------------+
+| eggrice.Achievement_Percentages | 0.007 G    |1 @
+| eggrice.App_ID_Info             | 0.002 G    |2 @
+| eggrice.App_ID_Info_Old         | 0.001 G    |3
+| eggrice.Friends                 | 111.622 G  |4 @
+| eggrice.Games_1                 | 36.006 G   |5 @
+| eggrice.Games_2                 | 63.258 G   |6 @
+| eggrice.Games_Daily             | 5.315 G    |7 ////////// @
+| eggrice.Games_Developers        | 0.001 G    |8 ////////// @
+| eggrice.Games_Developers_Old    | 0.000 G    |9 @ @
+| eggrice.Games_Genres            | 0.001 G    |10 ///////// @
+| eggrice.Games_Genres_Old        | 0.001 G    |11 @
+| eggrice.Games_Publishers        | 0.001 G    |12 ///////// @
+| eggrice.Games_Publishers_Old    | 0.000 G    |13 @
+| eggrice.Groups                  | 7.865 G    |14 //////// @
+| eggrice.Player_Summaries        | 100.606 G  |15 //////// @
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+
+
+Player_Summaries;
++--------------------------+---------------------+------+-----+---------+-------+
+| Field                    | Type                | Null | Key | Default | Extra |
++--------------------------+---------------------+------+-----+---------+-------+
+| steamid                  | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| personaname              | varchar(64)         | YES  | MUL | NULL    |       |
+| profileurl               | varchar(128)        | YES  |     | NULL    |       |
+| avatar                   | varchar(128)        | YES  |     | NULL    |       |
+| avatarmedium             | varchar(128)        | YES  |     | NULL    |       |
+| avatarfull               | varchar(128)        | YES  |     | NULL    |       |
+| personastate             | tinyint(3) unsigned | YES  |     | NULL    |       |
+| communityvisibilitystate | tinyint(3) unsigned | YES  |     | NULL    |       |
+| profilestate             | tinyint(3) unsigned | YES  |     | NULL    |       |
+| lastlogoff               | datetime            | YES  | MUL | NULL    |       |
+| commentpermission        | tinyint(3) unsigned | YES  |     | NULL    |       |
+| realname                 | varchar(128)        | YES  |     | NULL    |       |
+| primaryclanid            | bigint(20) unsigned | YES  | MUL | NULL    |       |
+| timecreated              | datetime            | YES  | MUL | NULL    |       |
+| gameid                   | int(10) unsigned    | YES  |     | NULL    |       |
+| gameserverip             | varchar(64)         | YES  |     | NULL    |       |
+| gameextrainfo            | varchar(64)         | YES  |     | NULL    |       |
+| cityid                   | int(10) unsigned    | YES  |     | NULL    |       |
+| loccountrycode           | varchar(2)          | YES  |     | NULL    |       |
+| locstatecode             | varchar(4)          | YES  |     | NULL    |       |
+| loccityid                | int(10) unsigned    | YES  |     | NULL    |       |
+| dateretrieved            | datetime            | YES  | MUL | NULL    |       |
++--------------------------+---------------------+------+-----+---------+-------+
+
+
+Groups;
++---------------+---------------------+------+-----+---------+-------+
+| Field         | Type                | Null | Key | Default | Extra |
++---------------+---------------------+------+-----+---------+-------+
+| steamid       | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| groupid       | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| dateretrieved | datetime            | YES  |     | NULL    |       |
++---------------+---------------------+------+-----+---------+-------+
+
+Games_Publishers;
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Publisher | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+
+
+Games_Genres;
++-------+------------------+------+-----+---------+-------+
+| Field | Type             | Null | Key | Default | Extra |
++-------+------------------+------+-----+---------+-------+
+| appid | int(10) unsigned | NO   | PRI | NULL    |       |
+| Genre | varchar(64)      | NO   | PRI | NULL    |       |
++-------+------------------+------+-----+---------+-------+
+
+
+Games_Developers_Old;
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Developer | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+
+Games_Developers;
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Developer | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+
+
+Games_Daily;
++------------------+---------------------+------+-----+---------------------+-------+
+| Field            | Type                | Null | Key | Default             | Extra |
++------------------+---------------------+------+-----+---------------------+-------+
+| steamid          | bigint(20) unsigned | NO   | PRI | NULL                |       |
+| appid            | int(10) unsigned    | NO   | PRI | NULL                |       |
+| playtime_2weeks  | int(10) unsigned    | YES  |     | NULL                |       |
+| playtime_forever | int(10) unsigned    | YES  |     | NULL                |       |
+| dateretrieved    | datetime            | NO   | PRI | 0000-00-00 00:00:00 |       |
++------------------+---------------------+------+-----+---------------------+-------+
+
+Friends Table :
++---------------+---------------------+------+-----+---------+-------+                                                                                
+| Field         | Type                | Null | Key | Default | Extra |                                                                              
++---------------+---------------------+------+-----+---------+-------+                                                                                 
+| steamid_a     | bigint(20) unsigned | NO   | PRI | NULL    |       |                                                                                 
+| steamid_b     | bigint(20) unsigned | NO   | PRI | NULL    |       |                                                                                 
+| relationship  | varchar(32)         | YES  |     | NULL    |       |                                                                                
+| friend_since  | datetime            | YES  | MUL | NULL    |       |                                                                                 
+| dateretrieved | datetime            | YES  | MUL | NULL    |       |                                                                                  
+| LccTag        | int(1) unsigned     | YES  |     | NULL    |       |                                                                              
++---------------+---------------------+------+-----+---------+-------+ 
+
+Games_1 :
++------------------+---------------------+------+-----+---------+-------+
+| Field            | Type                | Null | Key | Default | Extra |
++------------------+---------------------+------+-----+---------+-------+
+| steamid          | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| appid            | int(10) unsigned    | NO   | PRI | NULL    |       |
+| playtime_2weeks  | int(10) unsigned    | YES  |     | NULL    |       |
+| playtime_forever | int(10) unsigned    | YES  |     | NULL    |       |
+| dateretrieved    | datetime            | YES  |     | NULL    |       |
++------------------+---------------------+------+-----+---------+-------+
+Games_1;
++-----------+
+| COUNT(*)  |
++-----------+
+| 384270567 |
++-----------+
+
+Games_2:
++------------------+---------------------+------+-----+---------+-------+
+| Field            | Type                | Null | Key | Default | Extra |
++------------------+---------------------+------+-----+---------+-------+
+| steamid          | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| appid            | int(10) unsigned    | NO   | PRI | NULL    |       |
+| playtime_2weeks  | int(10) unsigned    | YES  |     | NULL    |       |
+| playtime_forever | int(10) unsigned    | YES  |     | NULL    |       |
+| dateretrieved    | datetime            | YES  |     | NULL    |       |
++------------------+---------------------+------+-----+---------+-------+
+ Games_2;
++-----------+
+| COUNT(*)  |
++-----------+
+| 447995352 |
++-----------+
+
+Games_Developers_Old:
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Developer | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+ Games_Developers_Old;
++----------+
+| COUNT(*) |
++----------+
+|     8825 |
++----------+
+
+Games_Genres_Old:
++-------+------------------+------+-----+---------+-------+
+| Field | Type             | Null | Key | Default | Extra |
++-------+------------------+------+-----+---------+-------+
+| appid | int(10) unsigned | NO   | PRI | NULL    |       |
+| Genre | varchar(64)      | NO   | PRI | NULL    |       |
++-------+------------------+------+-----+---------+-------+
+Games_Genres_Old;
++----------+
+| COUNT(*) |
++----------+
+|    15833 |
++----------+
+
+Games_Publishers_Old:
++-----------+------------------+------+-----+---------+-------+
+| Field     | Type             | Null | Key | Default | Extra |
++-----------+------------------+------+-----+---------+-------+
+| appid     | int(10) unsigned | NO   | PRI | NULL    |       |
+| Publisher | varchar(64)      | NO   | PRI | NULL    |       |
++-----------+------------------+------+-----+---------+-------+
+Games_Publishers_Old;
++----------+
+| COUNT(*) |
++----------+
+|     8863 |
++----------+
+
+
+Achievement_Percentages;
++------------+------------------+------+-----+---------+-------+
+| Field      | Type             | Null | Key | Default | Extra |
++------------+------------------+------+-----+---------+-------+
+| appid      | int(10) unsigned | NO   | PRI | NULL    |       |
+| Name       | varchar(64)      | NO   | PRI | NULL    |       |
+| Percentage | float            | NO   |     | NULL    |       |
++------------+------------------+------+-----+---------+-------+
+Achievement_Percentages;;
++----------+
+| COUNT(*) |
++----------+
+|   156253 |
++----------+
+
+
+App_ID_Info;
++----------------+------------------+------+-----+---------+-------+
+| Field          | Type             | Null | Key | Default | Extra |
++----------------+------------------+------+-----+---------+-------+
+| appid          | int(10) unsigned | NO   | PRI | NULL    |       |
+| Title          | varchar(128)     | NO   |     | NULL    |       |
+| Type           | varchar(128)     | NO   |     | NULL    |       |
+| Price          | double           | NO   |     | NULL    |       |
+| Release_Date   | datetime         | NO   |     | NULL    |       |
+| Rating         | int(11)          | NO   |     | NULL    |       |
+| Required_Age   | int(11)          | NO   |     | NULL    |       |
+| Is_Multiplayer | int(11)          | NO   |     | NULL    |       |
++----------------+------------------+------+-----+---------+-------+
+ App_ID_Info;
++----------+
+| COUNT(*) |
++----------+
+|    17783 |
++----------+
+
+App_ID_Info_Old;
++----------------+------------------+------+-----+---------+-------+
+| Field          | Type             | Null | Key | Default | Extra |
++----------------+------------------+------+-----+---------+-------+
+| appid          | int(10) unsigned | NO   | PRI | NULL    |       |
+| Title          | varchar(128)     | NO   |     | NULL    |       |
+| Type           | varchar(128)     | NO   |     | NULL    |       |
+| Price          | double           | NO   |     | NULL    |       |
+| Release_Date   | datetime         | NO   |     | NULL    |       |
+| Rating         | int(11)          | NO   |     | NULL    |       |
+| Required_Age   | int(11)          | NO   |     | NULL    |       |
+| Is_Multiplayer | int(11)          | NO   |     | NULL    |       |
++----------------+------------------+------+-----+---------+-------+
+App_ID_Info_Old;
++----------+
+| COUNT(*) |
++----------+
+|     8389 |
++----------+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,59 @@
+################### INSTALL MARIA DB
+
+>> apt-get install mariadb-server mariadb-client
+>> service mysql status
+>> service mysql start
+>> mysql_secure_installation
+
+#################### CHANGE CONFIGRATION FILES FOR INNDODB ENGINE OF MARIADB
+
+>> cd /etc/mysql/maria_conf.d/
+-- add following lines to the [mysqld] section in server.cnf file
+>> nano 50-server.cnf
+
+add:
+innodb_buffer_pool_size= 64G 
+innodb_buffer_pool_instances = 64
+innodb_log_file_size = 12G
+innodb_log_buffer_size = 6G
+innodb_write_io_threads = 64
+innodb_read_io_threads = 64
+innodb_io_capacity= 40000
+innodb_io_capacity_max = 50000
+innodb_flush_method = O_DIRECT
+innodb_autoinc_lock_mode =2
+innodb_flush_log_at_trx_commit = 0
+innodb_thread_concurrency=0
+
+query_cache_type=OFF
+query_cache_size=0
+slow_query_log=ON 
+
+################## RESTART MYSQL SERVER
+>> service mysql restart
+
+################## CONVERT THE LEGACY MyISAM Engine to InnoDB Engine in .sql file
+
+-- using linux based sed editor
+>> sed -i -re 's/^(\) ENGINE=)MyISAM/\1INNODB/gi' <filename> 
+
+-- in our case
+>> sed -i -re 's/^(\) ENGINE=)MyISAM/\1INNODB/gi' steam.sql
+
+###################### SET A NEW DATABASE
+>> mysql -u root -p #### this will get you into mysql terminal
+>> CREATE DATABASE <DBName> ;
+
+##################### START IMPORTING THE .SQL FILE:
+>> pv steam-copy1.sql | mysql -u root -p <DBName>
+
+######################################################################################################
+
+--- AFTER IMPORT IS COMPLETED:
+
+CREATE A CONNECTION FROM DASK TO MySQL Server >> THIS SHOULD BE FAST WITH APPROPRIATE DRIVERS
+
+LOAD THE DATA FROM DASK AND CONVERT INTO PARQUET FILE
+
+NOTEBOOK IS MADE FOR BOTH TASKS
+########################################################################################################
